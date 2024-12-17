@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>티켓 애니메이션</title>
+<style>
+  body {
+    background-color: rgb(0, 0, 0);
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+  }
+
+  .ticket {
+    position: relative;
+    width: 80%;
+    max-width: 1000px;
+    aspect-ratio: 5 / 1.5; /* 티켓 비율 */
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .ticket::before,
+  .ticket::after {
+    content: '';
+    position: absolute;
+    width: 35px; /* 원 크기 */
+    height: 35px;
+    background-color: black;
+    border-radius: 50%;
+    z-index: 2;
+  }
+
+  .ticket::before {
+    top: -25px; /* 상단 원 */
+    left: 68%;
+    transform: translateX(-50%);
+  }
+
+  .ticket::after {
+    bottom: -25px; /* 하단 원 */
+    left: 68%;
+    transform: translateX(-50%);
+  }
+
+  .dashed-line {
+    position: absolute;
+    top: 0%;
+    left: 68%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 100%;
+    border-left: 5px dashed black;
+    z-index: 3;
+  }
+
+  .ticket-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1;
+    color: black;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    padding: 20px;
+    pointer-events: none; /* 클릭 방지 */
+  }
+
+  .ticket-header {
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+  }
+
+  .ticket-footer {
+    font-size: 16px;
+  }
+
+  .barcode {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+    width: 30px;
+    height: 150px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+  }
+
+  .barcode div {
+    background-color: black;
+    width: 100%;
+  }
+
+  .barcode .thick {
+    height: 10px;
+  }
+
+  .barcode .medium {
+    height: 6px;
+  }
+
+  .barcode .thin {
+    height: 2px;
+  }
+
+  .barcode .extra-thick {
+    height: 14px;
+  }
+
+  .left-text, .right-text {
+    font-family: 'Arial', sans-serif;
+    font-weight: 900;
+    color: black;
+    text-transform: uppercase;
+  }
+
+  .left-text {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 25px;
+  }
+
+  .right-text {
+    position: absolute;
+    top: 37px;
+    right: 280px;
+    font-size: 17px;
+    transform: rotate(270deg);
+    transform-origin: top right;
+  }
+
+  .date-box {
+    position: absolute;
+    bottom: 20px;
+    left: 400px;
+    font-family: 'Arial', sans-serif;
+    font-size: 25px;
+    color: black;
+    font-weight: bold;
+  }
+
+  .rotated-text {
+    position: absolute;
+    top: 170px;
+    right: 190px;
+    transform: rotate(270deg);
+    transform-origin: top right;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  .rotated-text p {
+    margin: 0;
+    padding: 2px 0;
+  }
+
+  .bouncing-balls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 68%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .ball {
+    position: absolute;
+    width: 27px;
+    height: 27px;
+    background-color: black;
+    border-radius: 60%;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div class="ticket">
+    <div class="dashed-line"></div>
+    <div class="bouncing-balls"></div>
+    <div class="barcode">
+      <div class="thick"></div>
+      <div class="medium"></div>
+      <div class="thin"></div>
+      <div class="thick"></div>
+      <div class="medium"></div>
+      <div class="thin"></div>
+      <div class="thick"></div>
+      <div class="extra-thick"></div>
+      <div class="medium"></div>
+      <div class="thin"></div>
+      <div class="thick"></div>
+      <div class="medium"></div>
+      <div class="extra-thick"></div>
+      <div class="thin"></div>
+    </div>
+    <div class="left-text"> Karina Smigla- Bobinski ADA</div>
+    <div class="right-text"> Karina Smigla- Bobinski 
+        <p>ADA</p>
+    </div>
+    <div class="date-box">2024.12.12.-2024.1.12.</div>
+    <div class="rotated-text">
+      <p>DATE 12/12</p>
+      <p>GATE 1</p>
+      <p>Easy Listening</p>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
+  
+
+  <script>
+    const container = document.querySelector('.bouncing-balls');
+    const ticket = document.querySelector('.ticket');
+    const dashedLine = document.querySelector('.dashed-line');
+    const leftText = document.querySelector('.left-text');
+    const numBalls = 10;
+    const balls = [];
+  
+    const ticketWidth = ticket.offsetWidth;
+    const ticketHeight = ticket.offsetHeight;
+    const dashedLineLeft = dashedLine.offsetLeft;
+  
+    const leftTextRect = leftText.getBoundingClientRect();
+
+    // 캔버스 설정
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = ticketWidth;
+    canvas.height = ticketHeight;
+
+    for (let i = 0; i < numBalls; i++) {
+      const ball = document.createElement('div');
+      ball.classList.add('ball');
+      let randomX, randomY;
+  
+      // 텍스트 영역을 피하는 좌표 생성
+      do {
+        randomX = Math.random() * (dashedLineLeft - 70);
+        randomY = Math.random() * (ticketHeight - 70);
+      } while (
+        randomX < leftTextRect.right &&
+        randomY > leftTextRect.top &&
+        randomY < leftTextRect.bottom
+      );
+  
+      ball.style.top = `${randomY}px`;
+      ball.style.left = `${randomX}px`;
+      ball.dataset.vx = (Math.random() - 0.5) * 12; // 속도 증가
+      ball.dataset.vy = (Math.random() - 0.5) * 12; // 속도 증가
+      container.appendChild(ball);
+      balls.push(ball);
+    }
+  
+    function animateBalls() {
+      balls.forEach(ball => {
+        let x = parseFloat(ball.style.left);
+        let y = parseFloat(ball.style.top);
+        let vx = parseFloat(ball.dataset.vx);
+        let vy = parseFloat(ball.dataset.vy);
+  
+        x += vx;
+        y += vy;
+  
+        // 공의 움직임을 캔버스에 그리기
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + vx, y + vy);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        if (x <= 10 || x >= dashedLineLeft - 10) vx *= -1;
+        if (y <= 10 || y >= ticketHeight - 10) vy *= -1;
+  
+        ball.style.left = `${x}px`;
+        ball.style.top = `${y}px`;
+        ball.dataset.vx = vx;
+        ball.dataset.vy = vy;
+      });
+  
+      requestAnimationFrame(animateBalls);
+    }
+  
+    animateBalls();
+  </script>
+</body>
+</html>
